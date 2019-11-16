@@ -48,7 +48,7 @@
     #error Sorry, the Python extension requires Python 2.5.0 or later.
 #endif
 #if !defined(WITH_THREAD)
-    #error Sorry, the Python extension requires Python's threading support.
+    #error Sorry, the Python extension requires Python threading support.
 #endif
 
 /*
@@ -88,8 +88,10 @@ int python_streams_intercept();
 int python_php_init(); 
 
 /* PHP Object API */
-zend_object_value python_object_create(zend_class_entry *ce TSRMLS_DC);
-zend_uint python_get_arg_info(PyObject *callable, zend_arg_info **arg_info TSRMLS_DC) ;
+//zend_object_value python_object_create(zend_class_entry *ce TSRMLS_DC);
+zend_objects_store python_object_create(zend_class_entry *ce TSRMLS_DC);
+//zend_uint python_get_arg_info(PyObject *callable, zend_arg_info **arg_info TSRMLS_DC) ;
+zend_uintptr_t python_get_arg_info(PyObject *callable, zend_arg_info **arg_info TSRMLS_DC) ;
 
 /* PHP to Python Conversion */
 PyObject * pip_hash_to_list(zval *hash TSRMLS_DC);

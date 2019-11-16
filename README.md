@@ -1,10 +1,13 @@
 # Python in PHP
 
+Copyright &copy; 2019 Niraj Patel
 Copyright &copy; 2002-2012 Jon Parise
 
 ## Overview
 
 This code is released under the terms of the [MIT License][license].
+Currently works under php5 and python2 only.
+This fork will "eventually" upgrade to php7+python3
 
 ### Requirements
 
@@ -12,11 +15,12 @@ The Python extension has the following system requirements:
 
 - PHP version 5.2.0 or later
 - PEAR installer version 1.4.3 or later
+- PHP dev headers (php7.3-dev)
+
 
 ### Installation
 
-The easiest way to install the Perforce extension is by using the PECL
-installer::
+The easiest way to install the extension is by using the PECL installer::
 
     pecl install python
 
@@ -34,7 +38,12 @@ Manual][php-manual].
 
 This package's source code is hosted on GitHub:
 
-    https://github.com/jparise/php-python.git
+    https://github.com/np43/php-python.git
+
+    sudo apt-get install --no-install-recommends php7.3-dev python-dev re2c
+    phpize
+    ./configure --with-python
+
 
 A number of unit tests are included to help maintain correct and expected
 behavior.  The tests can be run using PECL tool's `run-tests` command:
@@ -65,6 +74,9 @@ When set to **2** (equivalent to Python's `-OO` command line option), the
 Python doc-strings will be removed in addition to the above optimizations.
 
 ## Development and Support
+
+### Build issues on Debian 10
+
 
 ### Reporting Problems and Suggestions
 

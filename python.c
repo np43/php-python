@@ -293,7 +293,8 @@ PHP_FUNCTION(python_version)
 	version = Py_GetVersion();
 	PHP_PYTHON_THREAD_RELEASE();
 
-	RETURN_STRING((char *)version, 1);
+	//RETURN_STRING((char *)version, 1);
+	RETURN_STRING((char *)version);
 }
 /* }}} */
 

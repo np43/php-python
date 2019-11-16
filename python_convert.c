@@ -58,8 +58,12 @@ pip_hash_to_list(zval *hash TSRMLS_DC)
 	 * Iterate over of the hash's elements.  We ignore the keys and convert
 	 * each value to its Python equivalent before inserting it into the list.
 	 */
-	while (zend_hash_get_current_data(Z_ARRVAL_P(hash),
-									  (void **)&entry) == SUCCESS) {
+	//#if ZEND_MODULE_API_NO < 20151012
+	//while ( zend_hash_get_current_data(Z_ARRVAL_P(hash), (void **)&entry) == SUCCESS ) {
+	while ( zend_hash_get_current_data(Z_ARRVAL_P(hash)) == SUCCESS ) {
+    //#else
+		ZEND_HASH_FOREACH_PTR(Z_ARRVAL_P(hash), entry)
+	//#endif
 		PyObject *item = pip_zval_to_pyobject(*entry TSRMLS_CC);
 		PyList_SetItem(list, pos++, item);
 		zend_hash_move_forward(Z_ARRVAL_P(hash));
@@ -102,15 +106,18 @@ pip_hash_to_dict(zval *hash TSRMLS_DC)
 	zend_hash_internal_pointer_reset(Z_ARRVAL_P(hash));
 
 	/* Iterate over the hash's elements. */
-	while (zend_hash_get_current_data(Z_ARRVAL_P(hash),
-									  (void **)&entry) == SUCCESS) {
+    #if ZEND_MODULE_API_NO < 20151012
+	while (zend_hash_get_current_data(Z_ARRVAL_P(hash), (void **)&entry) == SUCCESS) {
+    #else
+		ZEND_HASH_FOREACH_PTR(Z_ARRVAL_P(hash), entry);
+    #endif
 
 		/* Convert the PHP value to its Python equivalent (recursion). */
 		PyObject *item = pip_zval_to_pyobject(*entry TSRMLS_CC);
 
 		/* Assign the item with the appropriate key type (string or integer). */
-		switch (zend_hash_get_current_key(Z_ARRVAL_P(hash), &string_key,
-										  &num_key, 0)) {
+		//switch (zend_hash_get_current_key(Z_ARRVAL_P(hash), &string_key, &num_key, 0)) {
+		switch (zend_hash_get_current_key(Z_ARRVAL_P(hash), &string_key, &num_key)) {
 			case HASH_KEY_IS_STRING:
 				PyDict_SetItemString(dict, string_key, item);
 				break;
@@ -152,14 +159,15 @@ pip_zobject_to_pyobject(zval *obj TSRMLS_DC)
 	zend_hash_internal_pointer_reset(Z_OBJPROP_P(obj));
 
 	/* Iterate over the hash's elements */
-	while (zend_hash_get_current_data(Z_OBJPROP_P(obj),
-									  (void **)&entry) == SUCCESS) {
+	//while (zend_hash_get_current_data(Z_OBJPROP_P(obj), (void **)&entry) == SUCCESS) {
+    #if ZEND_MODULE_API_NO < 20151012
+	while (zend_hash_get_current_data(Z_OBJPROP_P(obj), (void **)&entry) == SUCCESS) {
 
 		/* Convert the PHP value to its Python equivalent (recursion) */
 		PyObject *item = pip_zval_to_pyobject(*entry TSRMLS_CC);
 
-		switch (zend_hash_get_current_key(Z_OBJPROP_P(obj),
-										  &string_key, &num_key, 0)) {
+		//switch (zend_hash_get_current_key(Z_OBJPROP_P(obj), &string_key, &num_key, 0)) {
+		switch (zend_hash_get_current_key(Z_OBJPROP_P(obj), &string_key, &num_key)) {
 			case HASH_KEY_IS_STRING:
 				PyDict_SetItemString(dict, string_key, item);
 				break;
@@ -168,13 +176,16 @@ pip_zobject_to_pyobject(zval *obj TSRMLS_DC)
 				PyObject_SetItem(dict, str, item);
 				Py_DECREF(str);
 				break;
-			case HASH_KEY_NON_EXISTANT:
+			case HASH_KEY_NON_EXISTENT:
 				php_error(E_ERROR, "Hash key is nonexistent");
 				break;
 		}
 
 		/* Advance to the next entry */
 		zend_hash_move_forward(Z_OBJPROP_P(obj));
+    #else
+        ZEND_HASH_FOREACH_PTR(Z_OBJPROP_P(obj), entry);
+    #endif
 	}
 
 	return dict;
@@ -194,7 +205,7 @@ pip_zval_to_pyobject(zval *val TSRMLS_DC)
 	}
 
 	switch (Z_TYPE_P(val)) {
-	case IS_BOOL:
+	case INI_BOOL:
 		ret = PyBool_FromLong(Z_LVAL_P(val));
 		break;
 	case IS_LONG:
@@ -498,7 +509,8 @@ pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC)
 	 * of the string are copied (i.e., duplicated) into the zval.
 	 */
 	if (PyString_Check(o)) {
-		ZVAL_STRINGL(zv, PyString_AS_STRING(o), PyString_GET_SIZE(o), 1);
+		//ZVAL_STRINGL(zv, PyString_AS_STRING(o), PyString_GET_SIZE(o), 1);
+		ZVAL_STRINGL(zv, PyString_AS_STRING(o), PyString_GET_SIZE(o));
 		return SUCCESS;
 	}
 
@@ -515,7 +527,8 @@ pip_pyobject_to_zval(PyObject *o, zval *zv TSRMLS_DC)
 	if (PyUnicode_Check(o)) {
 		PyObject *s = PyUnicode_AsUTF8String(o);
 		if (s) {
-			ZVAL_STRINGL(zv, PyString_AS_STRING(s), PyString_GET_SIZE(s), 1);
+			//ZVAL_STRINGL(zv, PyString_AS_STRING(s), PyString_GET_SIZE(s), 1);
+			ZVAL_STRINGL(zv, PyString_AS_STRING(s), PyString_GET_SIZE(s));
 			Py_DECREF(s);
 			return SUCCESS;
 		}
